@@ -93,7 +93,15 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark text-small shadow"
                                 aria-labelledby="dropdownUser1">
-                                <li><span class="dropdown-item-text text-muted">Base: {{ user.base_currency }}</span></li>
+                                <li><span class="dropdown-item-text text-light">Base: {{ user.base_currency }}</span></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center"
+                                       href="#"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#currencyModal">
+                                        <i class="bi bi-gear me-2 text-secondary"></i>Change Currency
+                                    </a>
+                                </li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
@@ -113,6 +121,7 @@
                 {% endif %}
             </div>
         </div>
+        {% include "finance/includes/_currency_modal.html" %}
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         {% if user.is_authenticated %}
             <script src="{% static 'finance/js/finance.js' %}"></script>

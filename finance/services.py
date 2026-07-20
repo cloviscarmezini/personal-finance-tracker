@@ -4,46 +4,45 @@ import requests
 from django.db import transaction as db_transaction
 from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
+from django.core.cache import cache
 
 from decimal import Decimal
 
 from .models import User, Wallet, Category, Budget, Transaction
 
 load_dotenv()
-
 class ExchangeRateClient:
-    def __init__(self):
-        self.api_key = os.getenv("EXCHANGE_RATE_API_KEY")
-        self.base_url = f"https://v6.exchangerate-api.com/v6/{self.api_key}"
-        self._fallbacks = {
-            ("USD", "BRL"): 5.40,
-            ("EUR", "BRL"): 5.90,
-            ("BRL", "USD"): 0.18,
-            ("BRL", "EUR"): 0.17,
-        }
+    def __init__(self, api_key=None):
+        self.api_key = api_key
+        self.base_url = "https://v6.exchangerate-api.com/v6"
 
     def get_pair_rate(self, from_currency: str, to_currency: str) -> Decimal:
-            """
-            Dispatches a GET request to fetch the real-time conversion multiplier between a pair.
-            """
-            if from_currency == to_currency:
-                return Decimal("1.0000")
+        if from_currency == to_currency:
+            return Decimal("1.0000")
 
-            url = f"{self.base_url}/pair/{from_currency}/{to_currency}"
+        cache_key = f"rate_{from_currency}_{to_currency}"
+        
+        cached_rate = cache.get(cache_key)
+        if cached_rate is not None:
+            return Decimal(str(cached_rate))
 
-            try:
-                response = requests.get(url, timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("result") == "success":
-                        return Decimal(str(data.get("conversion_rate", "1.0000")))
-            except (requests.RequestException, ValueError):
-                pass
+        try:
+            url = f"{self.base_url}/{self.api_key}/pair/{from_currency}/{to_currency}"
+            response = requests.get(url, timeout=5)
+            data = response.json()
+            
+            if data.get("result") == "success":
+                rate_value = data.get("conversion_rate")
+                
+                cache.set(cache_key, rate_value, timeout=3600)
+                
+                return Decimal(str(rate_value))
+        except Exception as e:
+            print(f"[Exchange Cache Engine] API Failure, applying emergency fallback: {e}")
+        
+        return Decimal("1.0000")
 
-            return self._fallbacks.get((from_currency, to_currency), Decimal("1.0000"))
-
-exchange_client = ExchangeRateClient()
-
+exchange_client = ExchangeRateClient(api_key=os.getenv("EXCHANGE_RATE_API_KEY"))
 
 def process_recurring_transactions(user) -> None:
     today = date.today()
@@ -70,7 +69,6 @@ def process_recurring_transactions(user) -> None:
             item.save()
 
 def create_user_with_default_categories(username, email, password, base_currency) -> User:
-    """Handles core registration logic and clones global system categories for the new profile."""
     with db_transaction.atomic():
         user = User.objects.create_user(username, email, password)
         user.base_currency = base_currency
@@ -159,3 +157,13 @@ def update_budget(user, budget_id, amount_limit, month, year) -> Budget:
 def delete_budget(user, budget_id) -> None:
     budget = get_object_or_404(Budget, id=budget_id, user=user)
     budget.delete()
+
+@db_transaction.atomic
+def update_user_base_currency(user, new_currency: str):
+    allowed_currencies = ["USD", "BRL", "EUR", "GBP", "ARS"]
+    if new_currency not in allowed_currencies:
+        raise ValueError("Target currency is outside supported domain matrices.")
+        
+    user.base_currency = new_currency
+    user.save()
+    return user

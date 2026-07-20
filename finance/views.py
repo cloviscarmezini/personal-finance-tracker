@@ -375,3 +375,15 @@ def delete_budget_view(request, budget_id):
         return redirect("login")
     services.delete_budget(request.user, budget_id)
     return redirect("manage_budgets")
+
+@login_required
+@require_POST
+def update_base_currency(request):
+    new_currency = request.POST.get("base_currency")
+    if new_currency:
+        try:
+            services.update_user_base_currency(request.user, new_currency)
+        except ValueError:
+            pass
+            
+    return redirect(request.META.get('HTTP_REFERER', 'index'))

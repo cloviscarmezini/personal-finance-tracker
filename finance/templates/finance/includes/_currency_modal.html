@@ -1,0 +1,40 @@
+<div class="modal fade"
+     id="currencyModal"
+     tabindex="-1"
+     aria-labelledby="currencyModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm border-0 shadow">
+        <div class="modal-content border-0">
+            <div class="modal-header border-bottom-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold" id="currencyModalLabel"><i class="bi bi-coin me-2 text-primary"></i>Base Currency</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <form action="{% url 'update_base_currency' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body px-4 pb-3">
+                    <p class="text-muted small">Select your default primary currency. All multi-currency wallets will be consolidated and calculated into this asset profile view.</p>
+                    <div class="mb-3">
+                        <select class="form-select fw-semibold text-dark"
+                                name="base_currency"
+                                required>
+                            <option value="USD" {% if user.base_currency == "USD" %}selected{% endif %}>USD ($) - US Dollar</option>
+                            <option value="BRL" {% if user.base_currency == "BRL" %}selected{% endif %}>BRL (R$) - Brazilian Real</option>
+                            <option value="EUR" {% if user.base_currency == "EUR" %}selected{% endif %}>EUR (€) - Euro</option>
+                            <option value="GBP" {% if user.base_currency == "GBP" %}selected{% endif %}>GBP (£) - British Pound</option>
+                            <option value="ARS" {% if user.base_currency == "ARS" %}selected{% endif %}>ARS ($) - Argentine Peso</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 pb-4">
+                    <button type="button"
+                            class="btn btn-light fw-semibold btn-sm"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-semibold btn-sm px-3">Update View</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

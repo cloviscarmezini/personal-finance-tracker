@@ -39,23 +39,13 @@ def get_balance_metrics(user, target_year: int, target_month: int, start_date=No
         
         if target_deadline < current_deadline:
             accumulated_metric_type = "end_month_balance"
-            if target_month == 12:
-                accumulated_q = criteria_q & Q(date__lt=date(target_year + 1, 1, 1))
-            else:
-                accumulated_q = criteria_q & Q(date__lt=date(target_year, target_month + 1, 1))
+            accumulated_q = criteria_q & Q(date__lt=date(target_year if target_month < 12 else target_year + 1, target_month + 1 if target_month < 12 else 1, 1))
         elif target_deadline > current_deadline:
             accumulated_metric_type = "projected_balance"
-            if target_month == 12:
-                accumulated_q = criteria_q & Q(date__lt=date(target_year + 1, 1, 1))
-            else:
-                accumulated_q = criteria_q & Q(date__lt=date(target_year, target_month + 1, 1))
+            accumulated_q = criteria_q & Q(date__lt=date(target_year if target_month < 12 else target_year + 1, target_month + 1 if target_month < 12 else 1, 1))
         else:
             accumulated_metric_type = "current_balance"
             accumulated_q = criteria_q & Q(date__lte=today)
-
-    acc_inflow = Transaction.objects.filter(accumulated_q & Q(transaction_type="INFLOW")).aggregate(total=Sum('amount_in_base_currency'))['total'] or Decimal('0.00')
-    acc_outflow = Transaction.objects.filter(accumulated_q & Q(transaction_type="OUTFLOW")).aggregate(total=Sum('amount_in_base_currency'))['total'] or Decimal('0.00')
-    accumulated_balance = float(acc_inflow - acc_outflow)
 
     if start_date or end_date:
         interval_metric_type = "balance"
@@ -68,9 +58,26 @@ def get_balance_metrics(user, target_year: int, target_month: int, start_date=No
         interval_metric_type = "monthly_balance"
         interval_q = criteria_q & Q(date__year=target_year, date__month=target_month)
 
-    int_inflow = Transaction.objects.filter(interval_q & Q(transaction_type="INFLOW")).aggregate(total=Sum('amount_in_base_currency'))['total'] or Decimal('0.00')
-    int_outflow = Transaction.objects.filter(interval_q & Q(transaction_type="OUTFLOW")).aggregate(total=Sum('amount_in_base_currency'))['total'] or Decimal('0.00')
-    interval_balance = float(int_inflow - int_outflow)
+    acc_totals = Transaction.objects.filter(accumulated_q)\
+                                    .values('wallet_id', 'wallet__currency', 'transaction_type')\
+                                    .annotate(total=Sum('amount'))
+
+    int_totals = Transaction.objects.filter(interval_q)\
+                                    .values('wallet_id', 'wallet__currency', 'transaction_type')\
+                                    .annotate(total=Sum('amount'))
+
+    accumulated_balance = 0.0
+    interval_balance = 0.0
+
+    for entry in acc_totals:
+        rate = float(exchange_client.get_pair_rate(entry['wallet__currency'], base_currency))
+        factor = 1.0 if entry['transaction_type'] == 'INFLOW' else -1.0
+        accumulated_balance += float(entry['total']) * factor * rate
+
+    for entry in int_totals:
+        rate = float(exchange_client.get_pair_rate(entry['wallet__currency'], base_currency))
+        factor = 1.0 if entry['transaction_type'] == 'INFLOW' else -1.0
+        interval_balance += float(entry['total']) * factor * rate
 
     return {
         "accumulated_metric_type": accumulated_metric_type,

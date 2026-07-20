@@ -122,3 +122,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 LOGIN_URL = "login"
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake-ledger-cache',
+    }
+}
