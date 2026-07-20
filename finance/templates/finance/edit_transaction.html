@@ -1,0 +1,37 @@
+{% extends "finance/layout.html" %}
+{% block title %}Edit Transaction{% endblock title %}
+{% block body %}
+    <div class="container py-4">
+        <div class="card border-0 shadow-sm col-md-6 mx-auto p-4">
+            <h4 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square me-2 text-warning"></i>Modify Description & Category</h4>
+            <p class="text-muted small">Note: To maintain ledger integrity, the original movement type, cash amount, and targeted wallet structure cannot be altered here. If needed, please drop this transaction and log a new entry.</p>
+            <hr>
+            <form action="{% url 'edit_transaction' transaction.id %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Description Log</label>
+                    <input type="text"
+                           class="form-control"
+                           name="description"
+                           value="{{ transaction.description }}"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">Classification Category</label>
+                    <select class="form-select" name="category">
+                        <option value="">[ Uncategorized ]</option>
+                        {% for c in categories %}
+                            <option value="{{ c.id }}"
+                                    {% if transaction.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'manage_transactions' %}"
+                       class="btn btn-light fw-semibold">Back</a>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Update Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock body %}

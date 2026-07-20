@@ -1,0 +1,91 @@
+{% extends "finance/layout.html" %}
+{% block title %}Manage Budgets{% endblock title %}
+{% block body %}
+    <div class="container-fluid pt-3">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle me-2 text-primary"></i>Set Target Budget</h5>
+                    <form action="{% url 'manage_budgets' %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Target Category</label>
+                            <select class="form-select" name="category" required>
+                                {% for c in categories %}
+                                    <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Monthly Threshold Value</label>
+                            <input type="number"
+                                   step="0.01"
+                                   class="form-control"
+                                   name="amount_limit"
+                                   required
+                                   placeholder="0.00">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Month</label>
+                                <input type="number"
+                                       class="form-control"
+                                       name="month"
+                                       min="1"
+                                       max="12"
+                                       value="7">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Year</label>
+                                <input type="number"
+                                       class="form-control"
+                                       name="year"
+                                       min="2026"
+                                       value="2026">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">Establish Limit</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm p-3">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-sliders2 me-2 text-primary"></i>Active Spending Thresholds</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr class="small text-uppercase text-secondary fw-bold">
+                                    <th>Category</th>
+                                    <th>Limit Cap</th>
+                                    <th>Timeline Period</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in page_obj %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ b.category.name }}</td>
+                                        <td class="fw-bold">$ {{ b.amount_limit|floatformat:2 }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ b.month }} / {{ b.year }}</span></td>
+                                        <td class="text-end">
+                                            <a href="{% url 'edit_budget' b.id %}"
+                                               class="btn btn-sm btn-outline-dark me-1"><i class="bi bi-pencil"></i></a>
+                                            <a href="{% url 'delete_budget' b.id %}"
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('Drop this threshold constraint?');"><i class="bi bi-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No threshold limits allocated.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include "finance/includes/_pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

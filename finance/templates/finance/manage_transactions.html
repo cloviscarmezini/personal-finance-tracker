@@ -1,0 +1,143 @@
+{% extends "finance/layout.html" %}
+{% block title %}Transactions Ledger{% endblock title %}
+{% block body %}
+    <div class="container-fluid pt-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold text-dark mb-0"><i class="bi bi-arrow-left-right me-2 text-primary"></i>Transactions Ledger</h3>
+            <button class="btn btn-primary btn-sm fw-semibold no-print"
+                    data-bs-toggle="modal"
+                    data-bs-target="#transactionModal">
+                <i class="bi bi-plus-circle me-1"></i>Log Transaction
+            </button>
+        </div>
+        <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
+            <form method="get" action="{% url 'manage_transactions' %}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Wallet</label>
+                    <select class="form-select form-select-sm" name="wallet">
+                        <option value="">All Wallets</option>
+                        {% for w in wallets %}
+                            <option value="{{ w.id }}"
+                                    {% if current_filters.wallet == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }} ({{ w.currency }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Category</label>
+                    <select class="form-select form-select-sm" name="category">
+                        <option value="">All Categories</option>
+                        <option value="uncategorized"
+                                {% if current_filters.category == "uncategorized" %}selected{% endif %}>[ Uncategorized ]</option>
+                        {% for c in categories %}
+                            <option value="{{ c.id }}"
+                                    {% if current_filters.category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Start Date</label>
+                    <input type="date"
+                           class="form-control form-control-sm"
+                           name="start_date"
+                           value="{{ current_filters.start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">End Date</label>
+                    <input type="date"
+                           class="form-control form-control-sm"
+                           name="end_date"
+                           value="{{ current_filters.end_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Min Amount</label>
+                    <input type="number"
+                           step="0.01"
+                           class="form-control form-control-sm"
+                           name="min_amount"
+                           placeholder="0.00"
+                           value="{{ current_filters.min_amount }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Max Amount</label>
+                    <input type="number"
+                           step="0.01"
+                           class="form-control form-control-sm"
+                           name="max_amount"
+                           placeholder="0.00"
+                           value="{{ current_filters.max_amount }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Sorting Order</label>
+                    <select class="form-select form-select-sm" name="order">
+                        <option value="date_desc"
+                                {% if current_filters.order == "date_desc" or not current_filters.order %}selected{% endif %}>Creation Date (Newest)</option>
+                        <option value="date_asc"
+                                {% if current_filters.order == "date_asc" %}selected{% endif %}>Creation Date (Oldest)</option>
+                        <option value="price_high"
+                                {% if current_filters.order == "price_high" %}selected{% endif %}>Amount (Highest)</option>
+                        <option value="price_low"
+                                {% if current_filters.order == "price_low" %}selected{% endif %}>Amount (Lowest)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="bi bi-filter me-1"></i>Apply</button>
+                    <a href="{% url 'manage_transactions' %}"
+                       class="btn btn-outline-secondary btn-sm w-100 fw-semibold">Clear</a>
+                </div>
+            </form>
+        </div>
+        <div class="card border-0 shadow-sm p-3">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr class="small text-uppercase text-secondary fw-bold">
+                            <th>Date</th>
+                            <th>Wallet</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th class="text-end">Value</th>
+                            <th class="text-end no-print">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-table-body">
+                        {% for t in page_obj %}
+                            <tr>
+                                <td class="text-secondary small">{{ t.date|date:"Y-m-d" }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ t.wallet.name }}</span></td>
+                                <td>
+                                    {% if t.category %}
+                                        <span class="badge text-dark border small"
+                                              style="background-color: {{ t.category.color }}22;
+                                                     border-color: {{ t.category.color }} !important">
+                                            <i class="bi {{ t.category.icon }} me-1"
+                                               style="color: {{ t.category.color }}"></i>{{ t.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border small"><i class="bi bi-question-circle me-1"></i>Uncategorized</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-semibold text-dark">{{ t.description }}</td>
+                                <td class="fw-bold text-end {% if t.transaction_type == 'INFLOW' %}text-success{% else %}text-danger{% endif %}">
+                                    {% if t.transaction_type == 'INFLOW' %}+{% else %}-{% endif %} {{ t.wallet.currency }} {{ t.amount|floatformat:2 }}
+                                </td>
+                                <td class="text-end no-print">
+                                    <a href="{% url 'edit_transaction' t.id %}"
+                                       class="btn btn-sm btn-outline-dark me-1"><i class="bi bi-pencil"></i></a>
+                                    <a href="{% url 'delete_transaction' t.id %}"
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this transaction? The wallet balance will be adjusted.');"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No financial movements found matching current parameters.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include "finance/includes/_pagination.html" %}
+        </div>
+    </div>
+    {% include "finance/includes/_transaction_modal.html" %}
+{% endblock body %}

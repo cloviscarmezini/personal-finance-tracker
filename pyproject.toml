@@ -1,0 +1,6 @@
+[tool.djlint]
+profile = "django"
+indent = 4
+max_line_length = 100
+format_css = true
+format_js = true

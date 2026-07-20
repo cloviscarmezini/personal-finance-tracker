@@ -1,0 +1,69 @@
+{% extends "finance/layout.html" %}
+{% block title %}Manage Wallets{% endblock title %}
+{% block body %}
+    <div class="container-fluid pt-3">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle me-2 text-primary"></i>Create Wallet</h5>
+                    <form action="{% url 'manage_wallets' %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Wallet Name</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="name"
+                                   required
+                                   placeholder="e.g., Bank Account">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Currency Type</label>
+                            <select class="form-select" name="currency">
+                                <option value="BRL">Brazilian Real (R$)</option>
+                                <option value="USD">US Dollar ($)</option>
+                                <option value="EUR">Euro (€)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">Save Account</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm p-3">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-wallet2 me-2 text-primary"></i>Active Ledgers</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr class="small text-uppercase text-secondary fw-bold">
+                                    <th>Name</th>
+                                    <th>Currency</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for w in page_obj %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ w.name }}</td>
+                                        <td><span class="badge bg-secondary">{{ w.currency }}</span></td>
+                                        <td class="text-end">
+                                            <a href="{% url 'edit_wallet' w.id %}"
+                                               class="btn btn-sm btn-outline-dark me-1"><i class="bi bi-pencil"></i></a>
+                                            <a href="{% url 'delete_wallet' w.id %}"
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('Delete this wallet registry?');"><i class="bi bi-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">No entries matched.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% include "finance/includes/_pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}

@@ -1,0 +1,44 @@
+{% extends "finance/layout.html" %}
+{% block title %}Edit Category{% endblock title %}
+{% block body %}
+    <div class="container py-4">
+        <div class="card border-0 shadow-sm col-md-6 mx-auto p-4">
+            <h4 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square me-2 text-warning"></i>Modify Category</h4>
+            <form action="{% url 'edit_category' category.id %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Category Name</label>
+                    <input type="text"
+                           class="form-control"
+                           name="name"
+                           value="{{ category.name }}"
+                           required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Color Hex Representation</label>
+                    <input type="color"
+                           class="form-control form-control-color w-100"
+                           name="color"
+                           value="{{ category.color }}">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">Icon Presentation</label>
+                    <select class="form-select" name="icon">
+                        <option value="bi-tag" {% if category.icon == "bi-tag" %}selected{% endif %}>Default Tag</option>
+                        <option value="bi-cart"
+                                {% if category.icon == "bi-cart" %}selected{% endif %}>Cart</option>
+                        <option value="bi-heart-pulse"
+                                {% if category.icon == "bi-heart-pulse" %}selected{% endif %}>Health</option>
+                        <option value="bi-controller"
+                                {% if category.icon == "bi-controller" %}selected{% endif %}>Entertainment</option>
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'manage_categories' %}"
+                       class="btn btn-light fw-semibold">Back</a>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock body %}

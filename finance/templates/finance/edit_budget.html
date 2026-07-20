@@ -1,0 +1,53 @@
+{% extends "finance/layout.html" %}
+{% block title %}Edit Budget{% endblock title %}
+{% block body %}
+    <div class="container py-4">
+        <div class="card border-0 shadow-sm col-md-6 mx-auto p-4">
+            <h4 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square me-2 text-warning"></i>Modify Allocation Threshold</h4>
+            <form action="{% url 'edit_budget' budget.id %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Target Category Block</label>
+                    <input type="text"
+                           class="form-control bg-light"
+                           value="{{ budget.category.name }}"
+                           disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Limit Amount</label>
+                    <input type="number"
+                           step="0.01"
+                           class="form-control"
+                           name="amount_limit"
+                           value="{{ budget.amount_limit }}"
+                           required>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Month</label>
+                        <input type="number"
+                               class="form-control"
+                               name="month"
+                               value="{{ budget.month }}"
+                               min="1"
+                               max="12"
+                               required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Year</label>
+                        <input type="number"
+                               class="form-control"
+                               name="year"
+                               value="{{ budget.year }}"
+                               min="2026"
+                               required>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'manage_budgets' %}" class="btn btn-light fw-semibold">Back</a>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Update Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock body %}

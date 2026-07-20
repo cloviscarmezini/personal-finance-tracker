@@ -1,0 +1,32 @@
+{% extends "finance/layout.html" %}
+{% block title %}Edit Wallet{% endblock title %}
+{% block body %}
+    <div class="container py-4">
+        <div class="card border-0 shadow-sm col-md-6 mx-auto p-4">
+            <h4 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square me-2 text-warning"></i>Modify Wallet Registry</h4>
+            <form action="{% url 'edit_wallet' wallet.id %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Wallet Name</label>
+                    <input type="text"
+                           class="form-control"
+                           name="name"
+                           value="{{ wallet.name }}"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">Currency Standard</label>
+                    <select class="form-select" name="currency">
+                        <option value="BRL" {% if wallet.currency == "BRL" %}selected{% endif %}>Brazilian Real (R$)</option>
+                        <option value="USD" {% if wallet.currency == "USD" %}selected{% endif %}>US Dollar ($)</option>
+                        <option value="EUR" {% if wallet.currency == "EUR" %}selected{% endif %}>Euro (€)</option>
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'manage_wallets' %}" class="btn btn-light fw-semibold">Back</a>
+                    <button type="submit" class="btn btn-warning fw-semibold px-4">Update Wallet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock body %}
