@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAsyncForm('categoryForm', '/api/resources/category/create', 'categoryModal');
     setupAsyncForm('budgetForm', '/api/resources/budget/create', 'budgetModal');
 
-    setupTransactionFormInterceptor();
+    setupTransactionGlobalListener();
 });
 
 function setupAsyncForm(formId, endpoint, modalId) {
@@ -51,76 +51,141 @@ function setupAsyncForm(formId, endpoint, modalId) {
     });
 }
 
-function setupTransactionFormInterceptor() {
-    const transactionModal = document.getElementById('transactionModal');
-    if (!transactionModal) return;
-
-    const form = transactionModal.querySelector('form');
-    const tableBody = document.getElementById('transactions-table-body');
-    
-    if (!form || !tableBody) return;
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+function setupTransactionGlobalListener() {
+    document.addEventListener('submit', async (e) => {
+        if (e.target && e.target.id === 'transactionForm') {
+            const tableBody = document.getElementById('transactions-table-body');
+            
+            if (!tableBody) {
+                return;
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const t = data.transaction;
-                
-                const modalInstance = bootstrap.Modal.getInstance(transactionModal);
-                if (modalInstance) modalInstance.hide();
-                
-                form.reset();
 
-                if (tableBody.children.length === 1 && tableBody.querySelector('.text-center')) {
-                    tableBody.innerHTML = '';
-                }
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
 
-                const newRow = document.createElement('tr');
-                
-                const typeSign = t.transaction_type === 'INFLOW' ? '+' : '-';
-                const typeClass = t.transaction_type === 'INFLOW' ? 'text-success' : 'text-danger';
-                
-                let categoryBadge = '';
-                if (t.category_name !== 'Uncategorized') {
-                    categoryBadge = `
-                        <span class="badge text-dark border small" style="background-color: ${t.category_color}22; border-color: ${t.category_color} !important;">
-                            <i class="bi ${t.category_icon} me-1" style="color: ${t.category_color};"></i>${t.category_name}
-                        </span>`;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const t = data.transaction;
+                    
+                    await refreshBalanceCards();
+
+                    const modalElement = document.getElementById('transactionModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                    if (modalInstance) modalInstance.hide();
+                    form.reset();
+
+                    if (tableBody.children.length === 1 && tableBody.querySelector('.text-center')) {
+                        tableBody.innerHTML = '';
+                    }
+
+                    const newRow = document.createElement('tr');
+                    const typeSign = t.transaction_type === 'INFLOW' ? '+' : '-';
+                    const typeClass = t.transaction_type === 'INFLOW' ? 'text-success' : 'text-danger';
+                    
+                    let categoryBadge = t.category_name !== 'Uncategorized' 
+                        ? `<span class="badge text-dark border small" style="background-color: ${t.category_color}22; border-color: ${t.category_color} !important;">
+                                <i class="bi ${t.category_icon} me-1" style="color: ${t.category_color};"></i>${t.category_name}
+                           </span>`
+                        : `<span class="badge bg-light text-muted border small"><i class="bi bi-question-circle me-1"></i>Uncategorized</span>`;
+
+                    newRow.innerHTML = `
+                        <td class="text-secondary small">${t.date}</td>
+                        <td><span class="badge bg-light text-dark border">${t.wallet_name}</span></td>
+                        <td>${categoryBadge}</td>
+                        <td class="fw-semibold text-dark">${t.description}</td>
+                        <td class="fw-bold text-end ${typeClass}">
+                            ${typeSign} ${t.wallet_currency} ${t.amount.toFixed(2)}
+                        </td>
+                        <td class="text-end no-print">
+                            <a href="${t.edit_url}" class="btn btn-sm btn-outline-dark me-1"><i class="bi bi-pencil"></i></a>
+                            <a href="${t.delete_url}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this transaction?');"><i class="bi bi-trash"></i></a>
+                        </td>
+                    `;
+
+                    tableBody.insertBefore(newRow, tableBody.firstChild);
                 } else {
-                    categoryBadge = `<span class="badge bg-light text-muted border small"><i class="bi bi-question-circle me-1"></i>Uncategorized</span>`;
+                    alert('Operation failed: ' + data.message);
                 }
-
-                newRow.innerHTML = `
-                    <td class="text-secondary small">${t.date}</td>
-                    <td><span class="badge bg-light text-dark border">${t.wallet_name}</span></td>
-                    <td>${categoryBadge}</td>
-                    <td class="fw-semibold text-dark">${t.description}</td>
-                    <td class="fw-bold text-end ${typeClass}">
-                        ${typeSign} ${t.wallet_currency} ${t.amount.toFixed(2)}
-                    </td>
-                    <td class="text-end no-print">
-                        <a href="${t.edit_url}" class="btn btn-sm btn-outline-dark me-1"><i class="bi bi-pencil"></i></a>
-                        <a href="${t.delete_url}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this transaction? The wallet balance will be adjusted.');"><i class="bi bi-trash"></i></a>
-                    </td>
-                `;
-
-                tableBody.insertBefore(newRow, tableBody.firstChild);
-            } else {
-                alert('Operation failed: ' + data.message);
+            } catch (err) {
+                console.error('[Ledger SPA Error] Command failure:', err);
             }
-        })
-        .catch(err => console.error('Error handling async transaction entry:', err));
+        }
     });
+}
+
+async function refreshBalanceCards() {
+    const accumulatedCard = document.getElementById('card-accumulated-balance');
+    const balanceCard = document.getElementById('card-balance');
+    
+    if (!accumulatedCard && !balanceCard) return;
+
+    let searchParams = new URLSearchParams(window.location.search);
+    
+    if (!searchParams.has('month') && !searchParams.has('start_date')) {
+        const prevLink = document.querySelector('a[href*="month="]');
+        if (prevLink) {
+            const linkUrl = new URL(prevLink.href, window.location.origin);
+            const linkParams = new URLSearchParams(linkUrl.search);
+            
+            let targetMonth = parseInt(linkParams.get('month')) + 1;
+            let targetYear = parseInt(linkParams.get('year'));
+            
+            if (targetMonth > 12) {
+                targetMonth = 1;
+                targetYear += 1;
+            }
+            searchParams.set('month', targetMonth);
+            searchParams.set('year', targetYear);
+        }
+    }
+
+    const queryString = searchParams.toString();
+    const finalEndpoint = `/api/analytics/balance-metrics${queryString ? '?' + queryString : ''}`;
+    
+    try {
+        const response = await fetch(finalEndpoint, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.metrics) {
+            const m = data.metrics;
+            
+            if (accumulatedCard) {
+                const valueDisplay = accumulatedCard.querySelector('.balance-value');
+                if (valueDisplay) {
+                    valueDisplay.textContent = `${m.base_currency} ${m.accumulated_balance.toFixed(2)}`;
+                }
+            }
+            
+            if (balanceCard) {
+                const valueDisplay = balanceCard.querySelector('.balance-value');
+                if (valueDisplay) {
+                    valueDisplay.textContent = `${m.base_currency} ${m.interval_balance.toFixed(2)}`;
+                    
+                    if (m.interval_balance >= 0) {
+                        valueDisplay.classList.remove('text-danger');
+                        valueDisplay.classList.add('text-success');
+                    } else {
+                        valueDisplay.classList.remove('text-success');
+                        valueDisplay.classList.add('text-danger');
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[Ledger SPA Error] Query failure:', err);
+    }
 }
 
 function initAnalyticsChart(canvasElement) {

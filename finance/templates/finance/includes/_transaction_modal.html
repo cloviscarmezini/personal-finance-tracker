@@ -12,7 +12,9 @@
                         data-bs-dismiss="modal"
                         aria-label="Close"></button>
             </div>
-            <form action="{% url 'create_transaction' %}" method="post">
+            <form id="transactionForm"
+                  action="{% url 'create_transaction' %}"
+                  method="post">
                 {% csrf_token %}
                 <div class="modal-body px-4 pb-4">
                     <div class="mb-3">

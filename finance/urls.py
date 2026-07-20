@@ -31,4 +31,5 @@ urlpatterns = [
     
     path("api/analytics/chart", views.get_chart_data, name="get_chart_data"),
     path("api/analytics/budget", views.get_budget_status, name="get_budget_status"),
+    path("api/analytics/balance-metrics", views.api_balance_metrics, name="api_balance_metrics"),
 ]
