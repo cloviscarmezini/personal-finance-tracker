@@ -15,7 +15,21 @@
         <div class="container-fluid">
             <div class="row">
                 {% if user.is_authenticated %}
-                    <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse p-3 no-print">
+                    <div class="d-flex d-md-none align-items-center justify-content-between bg-dark px-3 py-2">
+                        <button class="btn btn-outline-light"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#sidebarMenu"
+                                aria-controls="sidebarMenu"
+                                aria-expanded="false"
+                                aria-label="Toggle sidebar">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <a href="{% url 'index' %}"
+                           class="text-white text-decoration-none fw-semibold">GlobalFinance</a>
+                    </div>
+                    <nav id="sidebarMenu"
+                         class="col-md-3 col-lg-2 d-md-block sidebar collapse p-3 no-print">
                         <a href="{% url 'index' %}"
                            class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
                             <i class="bi bi-bank2 fs-4 me-2"></i>
