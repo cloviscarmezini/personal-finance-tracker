@@ -22,16 +22,7 @@
                            value="{{ category.color }}">
                 </div>
                 <div class="mb-4">
-                    <label class="form-label small fw-semibold">Icon Presentation</label>
-                    <select class="form-select" name="icon">
-                        <option value="bi-tag" {% if category.icon == "bi-tag" %}selected{% endif %}>Default Tag</option>
-                        <option value="bi-cart"
-                                {% if category.icon == "bi-cart" %}selected{% endif %}>Cart</option>
-                        <option value="bi-heart-pulse"
-                                {% if category.icon == "bi-heart-pulse" %}selected{% endif %}>Health</option>
-                        <option value="bi-controller"
-                                {% if category.icon == "bi-controller" %}selected{% endif %}>Entertainment</option>
-                    </select>
+                    {% include "finance/includes/_icon_radio_selector.html" with selected_value=category.icon field_name="icon" label="Icon Presentation" %}
                 </div>
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'manage_categories' %}"

@@ -1,0 +1,147 @@
+<div class="icon-radio-selector-container">
+    <label class="{{ label_class|default:'form-label small fw-semibold mb-2' }}">
+        {{ label|default:'Select an Icon' }}
+    </label>
+    <div class="mb-2">
+        <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+            <input type="text"
+                   id="search-input-{{ field_name|default:'icon' }}"
+                   class="form-control"
+                   placeholder="Buscar ícone..."
+                   autocomplete="off">
+        </div>
+    </div>
+    <input type="hidden"
+           id="hidden-{{ field_name|default:'icon' }}"
+           name="{{ field_name|default:'icon' }}"
+           value="{{ selected_value|default:'' }}">
+    <div id="icon-grid-{{ field_name|default:'icon' }}"
+         class="icons-container p-2 border rounded bg-white">
+        <div class="text-muted small py-3 text-center w-100">Carregando ícones...</div>
+    </div>
+</div>
+<style>
+    .icons-container {
+        height: 240px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+        gap: 8px;
+        background-color: #f8f9fa !important;
+        align-content: start;
+    }
+
+    .icon-radio-card {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        border: 2px solid #dee2e6;
+        background-color: #fff;
+        height: 75px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        padding: 4px;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .icon-radio-card:hover {
+        border-color: #adb5bd;
+        transform: translateY(-2px);
+    }
+
+    .icon-radio-card.selected {
+        border-color: #0d6efd !important;
+        background-color: #f8f9fa;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const fieldName = "{{ field_name|default:'icon' }}";
+        const hiddenInput = document.getElementById(`hidden-${fieldName}`);
+        const gridContainer = document.getElementById(`icon-grid-${fieldName}`);
+        const searchInput = document.getElementById(`search-input-${fieldName}`);
+
+        if (!gridContainer || !hiddenInput) return;
+
+        let preSelected = "{{ selected_value|default:'' }}".trim();
+        let allIconEntries = [];
+
+        try {
+            const response = await fetch('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.json');
+            if (!response.ok) throw new Error('Falha ao buscar ícones');
+            const iconsData = await response.json();
+
+            allIconEntries = Object.entries(iconsData).map(([iconName]) => `bi-${iconName}`);
+
+            if (preSelected && allIconEntries.includes(preSelected)) {
+                allIconEntries = allIconEntries.filter(i => i !== preSelected);
+                allIconEntries.unshift(preSelected);
+            } else if (!preSelected && allIconEntries.length > 0) {
+                preSelected = allIconEntries[0];
+            }
+
+            hiddenInput.value = preSelected;
+            renderIcons(allIconEntries);
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase().trim();
+                    if (!query) {
+                        renderIcons(allIconEntries);
+                        return;
+                    }
+
+                    const filtered = allIconEntries.filter(className => {
+                        const rawName = className.replace('bi-', '').toLowerCase();
+                        return rawName.includes(query);
+                    });
+
+                    renderIcons(filtered);
+                });
+            }
+
+        } catch (err) {
+            console.error('Erro ao renderizar seletor de ícones:', err);
+            gridContainer.innerHTML = '<div class="text-danger small text-center w-100 py-3">Erro ao carregar ícones.</div>';
+        }
+
+        function renderIcons(entries) {
+            gridContainer.innerHTML = '';
+
+            if (entries.length === 0) {
+                gridContainer.innerHTML = '<div class="text-muted small py-3 text-center w-100 grid-full-width">Nenhum ícone encontrado.</div>';
+                return;
+            }
+
+            entries.forEach(className => {
+                const rawName = className.replace('bi-', '');
+                const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1).replace(/-/g, ' ');
+                const isSelected = (className === hiddenInput.value);
+
+                const card = document.createElement('div');
+                card.className = `icon-radio-card text-center ${isSelected ? 'selected' : ''}`;
+                card.dataset.value = className;
+
+                card.innerHTML = `
+                    <i class="bi ${className} fs-4 mb-1 text-dark"></i>
+                    <span class="text-truncate w-100 px-1" style="font-size: 0.65rem;" title="${displayName}">${displayName}</span>
+                `;
+
+                card.addEventListener('click', () => {
+                    gridContainer.querySelectorAll('.icon-radio-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    hiddenInput.value = className;
+                    hiddenInput.dispatchEvent(new Event('change'));
+                });
+
+                gridContainer.appendChild(card);
+            });
+        }
+    });
+</script>

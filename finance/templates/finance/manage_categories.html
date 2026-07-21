@@ -35,13 +35,7 @@
                                    value="#6c757d">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Icon Interface</label>
-                            <select class="form-select" name="icon">
-                                <option value="bi-tag">Default Tag</option>
-                                <option value="bi-cart">Cart</option>
-                                <option value="bi-heart-pulse">Health</option>
-                                <option value="bi-controller">Entertainment</option>
-                            </select>
+                            {% include "finance/includes/_icon_radio_selector.html" with field_name="icon" label="Icon Interface" %}
                         </div>
                         <button type="submit" class="btn btn-primary w-100 fw-semibold">Save Category</button>
                     </form>

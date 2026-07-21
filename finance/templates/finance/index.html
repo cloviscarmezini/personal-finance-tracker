@@ -181,7 +181,7 @@
                      required>
             </div>
             <div class="row">
-              <div class="col-md-6 mb-3 mb-md-0">
+              <div class="col-md-12 mb-3 mb-md-0">
                 <label class="form-label small fw-semibold text-secondary">Chart Color</label>
                 <input type="color"
                        class="form-control form-control-color w-100"
@@ -189,15 +189,8 @@
                        value="#6c757d"
                        title="Choose color">
               </div>
-              <div class="col-md-6">
-                <label class="form-label small fw-semibold text-secondary">Icon Class</label>
-                <select class="form-select" name="icon">
-                  <option value="bi-tag">Default Tag</option>
-                  <option value="bi-cart">Cart</option>
-                  <option value="bi-heart-pulse">Health</option>
-                  <option value="bi-controller">Entertainment</option>
-                  <option value="bi-book">Education</option>
-                </select>
+              <div class="col-md-12 mt-3">
+                {% include "finance/includes/_icon_radio_selector.html" with field_name="icon" label="Icon Class" label_class="form-label small fw-semibold text-secondary" %}
               </div>
             </div>
           </div>
