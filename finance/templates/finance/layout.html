@@ -123,6 +123,7 @@
         </div>
         {% include "finance/includes/_currency_modal.html" %}
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="{% static 'finance/js/shared.js' %}"></script>
         {% if user.is_authenticated %}
             <script src="{% static 'finance/js/finance.js' %}"></script>
         {% endif %}

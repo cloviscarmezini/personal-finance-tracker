@@ -77,4 +77,40 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const select = document.querySelector('select.js-currency-selector#base_currency');
+            if (!select) return;
+
+            fetch('/api/resources/currencies/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const currencies = Array.isArray(data.currencies) ? data.currencies : [];
+                    if (!currencies.length) return;
+
+                    const selectedValue = select.dataset.selected || select.value || '';
+                    select.innerHTML = '';
+
+                    currencies.forEach(({ code, name, symbol }) => {
+                        const option = document.createElement('option');
+                        option.value = code;
+                        option.textContent = symbol ? `${code} (${symbol}) - ${name}` : `${code} - ${name}`;
+                        if (code === selectedValue) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+
+                    if (selectedValue && !select.value) {
+                        select.value = selectedValue;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Failed to load currencies:', error);
+                });
+        });
+    </script>
 {% endblock unauthenticated_body %}
