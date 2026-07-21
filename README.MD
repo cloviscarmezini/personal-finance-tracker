@@ -55,12 +55,22 @@ Follow these steps to run the project in your local development environment:
 
 1.  **Prerequisites**: Ensure that you have Python 3.10+ and `pip` installed on your machine.
 2.  **Install Dependencies**:
-    Navigate to the root directory of the project (where `manage.py` is located) and install the required packages:
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    ```
+    Navigate to the root directory of the project (where `manage.py` is located) and set up your virtual environment and dependencies:
+
+    *   **For Development**:
+        ```bash
+        python3 -m venv venv
+        source venv/bin/activate
+        pip install -r requirements-dev.txt
+        ```
+
+    *   **For Production**:
+        ```bash
+        python3 -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        ```
+        
 3.  **Database Setup**:
     Run Django migrations to create the necessary tables in the default SQLite database:
     ```bash
