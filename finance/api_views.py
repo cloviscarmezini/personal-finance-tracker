@@ -1,5 +1,4 @@
 import json
-from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_POST, require_GET
@@ -10,6 +9,10 @@ from finance.mappers.wallet_mapper import WalletMapper
 from finance.mappers.category_mapper import CategoryMapper
 from finance.mappers.budget_mapper import BudgetMapper
 from finance.mappers.transaction_mapper import TransactionMapper
+from django.core.cache import cache
+import requests
+import os
+from django.conf import settings
 
 SUPPORTED_CURRENCIES = [
     {"code": "BRL", "name": "Brazilian Real", "symbol": "R$"},
@@ -166,3 +169,31 @@ def get_budget_status(request):
     except (ValidationError, ValueError) as exc:
         return _json_error(str(exc), status=400)
     return JsonResponse({"status": "success", "base_currency": request.user.base_currency, "budgets": budget_status_report})
+
+def get_icons_api(request):
+    cache_key = 'bootstrap_icons_json'
+    icons_data = cache.get(cache_key)
+    
+    if not icons_data:
+        try:
+            response = requests.get('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.json', timeout=3)
+            if response.status_code == 200:
+                icons_data = response.json()
+                cache.set(cache_key, icons_data, 86400) # Cache de 24 horas
+            else:
+                icons_data = None
+        except Exception:
+            icons_data = None
+            
+        if not icons_data:
+            try:
+                json_path = os.path.join(settings.BASE_DIR, 'finance', 'data', 'fallback_icons.json')
+                if os.path.exists(json_path):
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        icons_data = json.load(f)
+                else:
+                    icons_data = {}
+            except Exception as e:
+                icons_data = {"tag": {"name": "tag"}}
+            
+    return JsonResponse({'status': 'success', 'icons': icons_data})
