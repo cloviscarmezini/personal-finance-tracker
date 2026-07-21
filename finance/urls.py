@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/resources/wallet/create", api_views.create_wallet, name="api_create_wallet"),
     path("api/resources/category/create", api_views.create_category, name="api_create_category"),
     path("api/resources/budget/create", api_views.create_budget, name="api_create_budget"),
+    path("api/resources/currencies/", api_views.get_currencies, name="api_get_currencies"),
 
     path("api/metrics/balance", api_views.get_balance_metrics, name="api_metrics_balance"),
     path("api/analytics/balance-metrics", api_views.get_balance_metrics, name="api_analytics_balance_metrics"),

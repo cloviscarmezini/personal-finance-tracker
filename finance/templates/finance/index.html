@@ -138,10 +138,11 @@
             </div>
             <div class="mb-0">
               <label class="form-label small fw-semibold text-secondary">Currency</label>
-              <select class="form-select" name="currency" required>
-                <option value="BRL">Brazilian Real (R$)</option>
-                <option value="USD">US Dollar ($)</option>
-                <option value="EUR">Euro (€)</option>
+              <select class="form-select js-currency-selector"
+                      name="currency"
+                      data-selected="BRL"
+                      required>
+                <option value="">Loading currencies...</option>
               </select>
             </div>
           </div>

@@ -17,14 +17,11 @@
                 <div class="modal-body px-4 pb-3">
                     <p class="text-muted small">Select your default primary currency. All multi-currency wallets will be consolidated and calculated into this asset profile view.</p>
                     <div class="mb-3">
-                        <select class="form-select fw-semibold text-dark"
+                        <select class="form-select fw-semibold text-dark js-currency-selector"
                                 name="base_currency"
+                                data-selected="{{ user.base_currency }}"
                                 required>
-                            <option value="USD" {% if user.base_currency == "USD" %}selected{% endif %}>USD ($) - US Dollar</option>
-                            <option value="BRL" {% if user.base_currency == "BRL" %}selected{% endif %}>BRL (R$) - Brazilian Real</option>
-                            <option value="EUR" {% if user.base_currency == "EUR" %}selected{% endif %}>EUR (€) - Euro</option>
-                            <option value="GBP" {% if user.base_currency == "GBP" %}selected{% endif %}>GBP (£) - British Pound</option>
-                            <option value="ARS" {% if user.base_currency == "ARS" %}selected{% endif %}>ARS ($) - Argentine Peso</option>
+                            <option value="">Loading currencies...</option>
                         </select>
                     </div>
                 </div>

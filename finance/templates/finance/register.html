@@ -40,10 +40,12 @@
                         <div class="mb-3">
                             <label for="base_currency"
                                    class="form-label small fw-semibold text-secondary">Primary Base Currency</label>
-                            <select class="form-select" name="base_currency" id="base_currency">
-                                <option value="BRL" selected>Brazilian Real (R$)</option>
-                                <option value="USD">US Dollar ($)</option>
-                                <option value="EUR">Euro (€)</option>
+                            <select class="form-select js-currency-selector"
+                                    name="base_currency"
+                                    id="base_currency"
+                                    data-selected="BRL"
+                                    required>
+                                <option value="">Loading currencies...</option>
                             </select>
                             <div class="form-text text-muted small-text">Your global consolidated view metrics will calculate into this asset currency.</div>
                         </div>

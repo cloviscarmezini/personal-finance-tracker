@@ -11,6 +11,14 @@ from finance.mappers.category_mapper import CategoryMapper
 from finance.mappers.budget_mapper import BudgetMapper
 from finance.mappers.transaction_mapper import TransactionMapper
 
+SUPPORTED_CURRENCIES = [
+    {"code": "BRL", "name": "Brazilian Real", "symbol": "R$"},
+    {"code": "USD", "name": "US Dollar", "symbol": "$"},
+    {"code": "EUR", "name": "Euro", "symbol": "€"},
+    {"code": "GBP", "name": "British Pound", "symbol": "£"},
+    {"code": "ARS", "name": "Argentine Peso", "symbol": "$"},
+]
+
 
 def _parse_payload(request):
     content_type = request.content_type or ""
@@ -42,6 +50,11 @@ def create_wallet(request):
 
     wallet_dto = WalletMapper.to_response_dto(wallet)
     return JsonResponse({"status": "success", "wallet": wallet_dto.to_dict()})
+
+
+@require_GET
+def get_currencies(request):
+    return JsonResponse({"status": "success", "currencies": SUPPORTED_CURRENCIES})
 
 
 @login_required

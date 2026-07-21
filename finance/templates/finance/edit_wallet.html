@@ -16,10 +16,11 @@
                 </div>
                 <div class="mb-4">
                     <label class="form-label small fw-semibold">Currency Standard</label>
-                    <select class="form-select" name="currency">
-                        <option value="BRL" {% if wallet.currency == "BRL" %}selected{% endif %}>Brazilian Real (R$)</option>
-                        <option value="USD" {% if wallet.currency == "USD" %}selected{% endif %}>US Dollar ($)</option>
-                        <option value="EUR" {% if wallet.currency == "EUR" %}selected{% endif %}>Euro (€)</option>
+                    <select class="form-select js-currency-selector"
+                            name="currency"
+                            data-selected="{{ wallet.currency }}"
+                            required>
+                        <option value="">Loading currencies...</option>
                     </select>
                 </div>
                 <div class="d-flex justify-content-between">
