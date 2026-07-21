@@ -129,3 +129,5 @@ CACHES = {
         'LOCATION': 'unique-snowflake-ledger-cache',
     }
 }
+
+EXCHANGE_RATE_API_KEY = os.getenv("EXCHANGE_RATE_API_KEY", "")

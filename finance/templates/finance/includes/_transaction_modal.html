@@ -13,7 +13,7 @@
                         aria-label="Close"></button>
             </div>
             <form id="transactionForm"
-                  action="{% url 'create_transaction' %}"
+                  action="{{ transaction_action|default:'/manage/transactions/create' }}"
                   method="post">
                 {% csrf_token %}
                 <div class="modal-body px-4 pb-4">

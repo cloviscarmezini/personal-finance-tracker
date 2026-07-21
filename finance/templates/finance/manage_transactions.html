@@ -159,5 +159,5 @@
             {% include "finance/includes/_pagination.html" %}
         </div>
     </div>
-    {% include "finance/includes/_transaction_modal.html" %}
+    {% include "finance/includes/_transaction_modal.html" with transaction_action="/api/resources/transaction/create" %}
 {% endblock body %}

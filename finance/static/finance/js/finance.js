@@ -193,19 +193,39 @@ function initAnalyticsChart(canvasElement) {
     fetch('/api/analytics/chart')
         .then(res => res.json())
         .then(payload => {
-            if (!payload.labels || payload.labels.length === 0) {
+            const chartData = Array.isArray(payload.data) ? payload.data : [];
+            if (chartData.length === 0) {
                 renderEmptyChartState(canvasElement);
                 return;
             }
-            if(window.myGlobalChart) window.myGlobalChart.destroy();
+            const labels = chartData.map(item => item.label || 'Unknown');
+            const values = chartData.map(item => Number(item.value) || 0);
+            const colors = chartData.map(item => item.color || '#6c757d');
+
+            if (window.myGlobalChart) window.myGlobalChart.destroy();
             window.myGlobalChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: payload.labels,
-                    datasets: [{ data: payload.datasets[0].data, backgroundColor: payload.datasets[0].backgroundColor }]
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        hoverOffset: 8
+                    }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+                        tooltip: { callbacks: { label: context => `${context.label}: ${context.formattedValue}` } }
+                    }
+                }
             });
+        })
+        .catch(err => {
+            console.error('[Analytics Chart] Failed to load data:', err);
+            renderEmptyChartState(canvasElement);
         });
 }
 
@@ -213,31 +233,44 @@ function loadBudgetThresholds(containerElement) {
     fetch('/api/analytics/budget')
         .then(res => res.json())
         .then(data => {
-            if (!data.budgets || data.budgets.length === 0) {
+            const budgets = Array.isArray(data.budgets) ? data.budgets : [];
+            if (budgets.length === 0) {
                 containerElement.innerHTML = '<div class="col text-center text-muted py-3 w-100">No thresholds set.</div>';
                 return;
             }
             containerElement.innerHTML = '';
-            data.budgets.forEach(b => {
-                let contextColor = b.percentage >= 100 ? 'bg-danger' : (b.percentage >= 80 ? 'bg-warning' : 'bg-success');
+            budgets.forEach(b => {
+                const percentage = Number(b.usage_percentage) || 0;
+                const spent = Number(b.amount_spent) || 0;
+                const limit = Number(b.amount_limit) || 0;
+                const categoryLabel = b.category_name || 'Unknown';
+                const categoryColor = b.category_color || '#6c757d';
+                let progressClass = 'bg-success';
+                if (percentage >= 100) progressClass = 'bg-danger';
+                else if (percentage >= 80) progressClass = 'bg-warning';
+
                 const col = document.createElement('div');
                 col.className = 'col';
                 col.innerHTML = `
                     <div class="p-3 border rounded bg-light shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-semibold text-dark small">${b.category}</span>
-                            <span class="text-muted small">${b.percentage}%</span>
+                            <span class="fw-semibold text-dark small">${categoryLabel}</span>
+                            <span class="text-muted small">${percentage.toFixed(2)}%</span>
                         </div>
                         <div class="progress mb-2" style="height: 8px;">
-                            <div class="progress-bar ${contextColor}" role="progressbar" style="width: ${Math.min(b.percentage, 100)}%"></div>
+                            <div class="progress-bar ${progressClass}" role="progressbar" style="width: ${Math.min(percentage, 100)}%"></div>
                         </div>
                         <div class="d-flex justify-content-between text-secondary small">
-                            <span>Spent: $${b.spent.toFixed(2)}</span>
-                            <span>Limit: $${b.limit.toFixed(2)}</span>
+                            <span>Spent: ${data.base_currency || ''} ${spent.toFixed(2)}</span>
+                            <span>Limit: ${data.base_currency || ''} ${limit.toFixed(2)}</span>
                         </div>
                     </div>`;
                 containerElement.appendChild(col);
             });
+        })
+        .catch(err => {
+            console.error('[Budget Thresholds] Failed to load data:', err);
+            containerElement.innerHTML = '<div class="col text-center text-muted py-3 w-100">Unable to load thresholds.</div>';
         });
 }
 
