@@ -1,29 +1,28 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_POST
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
-from decimal import Decimal
+from django.http import Http404
 from finance.models import Wallet
+from finance.services import wallet_service
+
 
 @login_required
 def manage_wallets(request):
     if request.method == "POST":
-        name = request.POST.get("name", "").strip()
-        currency = request.POST.get("currency", "BRL").strip().upper()
-        initial_balance = str(request.POST.get("balance", "0.00")).replace(",", ".")
-
-        if not name:
-            return redirect("manage_wallets")
-
-        Wallet.objects.create(
-            user=request.user,
-            name=name,
-            currency=currency,
-            balance=Decimal(initial_balance)
-        )
+        try:
+            wallet_service.create_wallet(
+                user=request.user,
+                name=request.POST.get("name"),
+                currency=request.POST.get("currency", "BRL"),
+                balance=request.POST.get("balance", "0.00"),
+            )
+        except (ValidationError, ValueError):
+            return redirect(request.META.get("HTTP_REFERER", "manage_wallets"))
         return redirect("manage_wallets")
 
-    wallets = request.user.wallets.all().order_by("-created_at")
+    wallets = wallet_service.list_wallets(request.user)
     paginator = Paginator(wallets, 10)
     page_obj = paginator.get_page(request.GET.get("page"))
     return render(request, "finance/manage_wallets.html", {
@@ -34,34 +33,33 @@ def manage_wallets(request):
 @login_required
 @require_POST
 def create_wallet(request):
-    name = request.POST.get("name", "").strip()
-    currency = request.POST.get("currency", "BRL").strip().upper()
-    initial_balance = str(request.POST.get("balance", "0.00")).replace(",", ".")
-
-    if not name:
-        return redirect("manage_wallets")
-
-    Wallet.objects.create(
-        user=request.user,
-        name=name,
-        currency=currency,
-        balance=Decimal(initial_balance)
-    )
-    return redirect("manage_wallets")
+    return manage_wallets(request)
 
 @login_required
 def edit_wallet(request, wallet_id):
-    wallet = get_object_or_404(Wallet, id=wallet_id, user=request.user)
+    try:
+        wallet = wallet_service.get_wallet(request.user, wallet_id)
+    except (Wallet.DoesNotExist, ValidationError, ValueError):
+        raise Http404("Wallet not found")
+
     if request.method == "POST":
-        wallet.name = request.POST.get("name", wallet.name).strip()
-        wallet.currency = request.POST.get("currency", wallet.currency).strip().upper()
-        wallet.balance = Decimal(str(request.POST.get("balance", wallet.balance)).replace(",", "."))
-        wallet.save()
+        try:
+            wallet_service.update_wallet(
+                wallet_id=wallet_id,
+                user=request.user,
+                name=request.POST.get("name"),
+                currency=request.POST.get("currency"),
+            )
+        except (ValidationError, ValueError):
+            return redirect(request.META.get("HTTP_REFERER", "manage_wallets"))
         return redirect("manage_wallets")
     return render(request, "finance/edit_wallet.html", {"wallet": wallet})
 
 @login_required
 def delete_wallet(request, wallet_id):
-    wallet = get_object_or_404(Wallet, id=wallet_id, user=request.user)
-    wallet.delete()
+    try:
+        wallet_service.get_wallet(request.user, wallet_id)
+    except (Wallet.DoesNotExist, ValidationError, ValueError):
+        raise Http404("Wallet not found")
+    wallet_service.delete_wallet(wallet_id=wallet_id, user=request.user)
     return redirect("manage_wallets")
