@@ -36,11 +36,19 @@ class CategoryService(BaseService):
         category.delete()
 
     @db_transaction.atomic
-    def reset_categories(self, user, core_categories):
+    def reset_categories(self, user):
         Category.objects.filter(user=user).delete()
+        defaults = Category.objects.filter(is_system_default=True).values("name", "color", "icon")
         created = []
-        for cat_data in core_categories:
-            created.append(Category.objects.create(user=user, **cat_data))
+        for default in defaults:
+            created.append(
+                Category.objects.create(
+                    user=user,
+                    name=self._normalize_name(default["name"]),
+                    color=self._normalize_color(default["color"]),
+                    icon=self._normalize_icon(default["icon"]),
+                )
+            )
         return created
 
     def list_categories(self, user):

@@ -7,13 +7,6 @@ from django.core.paginator import Paginator
 from finance.models import Category
 from finance.services import category_service
 
-CORE_CATEGORY_TEMPLATE = [
-    {"name": "Housing", "color": "#0d6efd", "icon": "bi-house"},
-    {"name": "Food & Dining", "color": "#198754", "icon": "bi-egg-fried"},
-    {"name": "Cloud Architecture", "color": "#6f42c1", "icon": "bi-cloud"},
-    {"name": "Salary & Invoices", "color": "#ffc107", "icon": "bi-wallet2"}
-]
-
 
 @login_required
 def manage_categories(request):
@@ -74,5 +67,5 @@ def delete_category(request, category_id):
 @login_required
 @require_POST
 def reset_categories(request):
-    category_service.reset_categories(request.user, CORE_CATEGORY_TEMPLATE)
+    category_service.reset_categories(request.user)
     return redirect("manage_categories")

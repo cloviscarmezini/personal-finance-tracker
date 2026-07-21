@@ -3,6 +3,7 @@ from django.contrib.auth import login as login_user, logout as logout_user, auth
 from django.contrib.auth.forms import AuthenticationForm
 from django.db import IntegrityError
 from finance.models import User
+from finance.services import category_service
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -51,6 +52,8 @@ def register(request):
             )
             user.base_currency = base_currency
             user.save()
+
+            category_service.reset_categories(user)
             
             login_user(request, user)
             return redirect("index")
