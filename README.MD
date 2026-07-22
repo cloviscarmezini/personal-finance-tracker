@@ -57,6 +57,16 @@ The application uses environment variables for security and external API configu
     DEBUG=True
     EXCHANGE_RATE_API_KEY=your_exchange_api_key_here
 
+### Obtaining an Exchange API Key (Optional)
+
+The application integrates with **ExchangeRate-API** for real-time currency conversions. While the project includes built-in mock fallbacks, you can optionally set up a live API key:
+
+1. Visit [ExchangeRate-API](https://www.exchangerate-api.com/) and sign up for a free account.
+2. Copy your API Key from the dashboard.
+3. Paste the key into your `.env` file in the root directory:
+   
+EXCHANGE_RATE_API_KEY=your_api_key_here
+
 ### Automatic Fallbacks & Default Configuration
 To ensure zero-configuration setup for local evaluation and testing, **all environment variables feature built-in fallbacks**:
 
