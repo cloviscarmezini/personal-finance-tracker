@@ -49,6 +49,23 @@ The `finance/services/` directory contains all core business rules:
 
 ---
 
+## Environment Variables Setup
+
+The application uses environment variables for security and external API configurations. You can optionally create a `.env` file in the root directory based on the following variables:
+
+    SECRET_KEY=your_custom_django_secret_key
+    DEBUG=True
+    EXCHANGE_RATE_API_KEY=your_exchange_api_key_here
+
+### Automatic Fallbacks & Default Configuration
+To ensure zero-configuration setup for local evaluation and testing, **all environment variables feature built-in fallbacks**:
+
+*   **`SECRET_KEY`**: If not supplied in the environment, a default insecure development key is used automatically.
+*   **`DEBUG`**: Defaults to `True` for development convenience.
+*   **`EXCHANGE_RATE_API_KEY`**: If no API key is configured or if network requests fail, the `ExchangeClient` gracefully falls back to mock conversion rates, ensuring that currency exchanges, dashboard computations, and application features continue to function seamlessly without breaking.
+
+---
+
 ## How to Run the Application
 
 Follow these steps to run the project in your local development environment:
@@ -96,3 +113,12 @@ Follow these steps to run the project in your local development environment:
 
 *   **Icon Fallbacks:** The file `finance/data/fallback_icons.json` is used to ensure Bootstrap icons load gracefully in the event of network failures or if categories are created without defined icons.
 *   **Code Quality:** The project was developed with a strict focus on code formatting and quality, utilizing tools like `djlint` for Django templates, `cssbeautifier` for styling, and standard Python formatters guided by an `.editorconfig` file.
+
+---
+
+## 🎓 Academic Honesty & Credits
+
+*   **Author:** Clovis Carmezini (Junior)
+*   **Course:** CS50's Web Development with Python and JavaScript (HarvardX)
+
+This project was developed as the Capstone project for CS50 Web. All core architecture, services, DTOs, and front-end integration logic were designed and implemented specifically for this final submission.
