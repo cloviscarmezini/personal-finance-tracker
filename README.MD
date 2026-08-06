@@ -1,51 +1,65 @@
-# CS50 Web Capstone: Personal Finance Tracker
+# Personal Finance Tracker
+**CS50’s Web Development with Python and JavaScript - Capstone Project**
 
 ## Overview
-This project is a personal finance management web application built with Django. The system allows users to log transactions, manage multiple wallets, establish budgets, and categorize their income and expenses. Additionally, the application provides an interactive dashboard for financial data analysis and visualization.
+Personal Finance Tracker is a comprehensive, full-stack financial management web application built using Django and modern JavaScript. The platform empowers users to take full control of their financial health by tracking multi-currency transactions, managing diverse digital wallets, establishing dynamic monthly spending budgets, and analyzing real-time financial flows through an interactive visualization dashboard.
 
 ## Distinctiveness and Complexity
-This project fully satisfies the distinctiveness and complexity requirements for the CS50 Web Capstone for the following reasons:
 
-*   **Domain Distinctiveness:** This application is strictly a financial management tool. It is neither a social network nor an e-commerce platform, ensuring it is completely distinct from the other projects in the course.
-*   **Layered Architecture:** Unlike conventional, basic Django projects that place all logic inside views, this system implements a robust separation of concerns. It introduces DTOs (Data Transfer Objects), Mappers, Services, and Clients. This architecture completely isolates business logic from the presentation layer (Views), making the codebase highly scalable, testable, and maintainable.
-*   **External Integrations:** The project features a custom HTTP client (`exchange_client.py` and `exchange_service.py`) to handle communication with external currency exchange APIs, allowing for dynamic currency conversions and data integration.
-*   **Dynamic Front-End and Data Visualization:** The front-end leverages Bootstrap and custom JavaScript, integrated heavily with `Chart.js` to render interactive financial graphs on the Dashboard. The UI also relies on dynamic modals for quick transaction entries and currency exchanges without requiring full page reloads.
-*   **Custom Management Scripts:** Custom Django management commands (`seed_categories.py` and `seed_ledger.py`) were developed to automatically populate the database with default categories and sample transactions, significantly streamlining the initial setup process.
+This project satisfies and exceeds the distinctiveness and complexity requirements outlined in the CS50 Capstone specifications through its highly specific domain focus, enterprise-level software architecture, and seamless integration of external services.
+
+**Distinctiveness:**
+This application operates strictly within the financial technology (FinTech) domain. It is a dedicated Personal Finance Management Platform that requires complex, domain-specific logic. The system processes real-time consolidation of user assets across accounts operating in entirely different currencies (e.g., USD, BRL, EUR) by automatically applying dynamic exchange rates. Furthermore, it features an intelligent budget-tracking engine that computes monthly spending limits per category, triggering real-time threshold calculations as the user inputs new transactions. The data is then synthesized into an advanced ledger querying system that isolates monthly performance while allowing instantaneous multi-parameter filtering. 
+
+**Complexity:**
+The complexity of this project lies in its departure from standard, basic Django implementations. Instead of placing business logic directly inside views or templates, this application enforces a clean **Layered Architecture (Separation of Concerns)** to ensure high maintainability and testability:
+* **Service Layer Pattern:** All core business computations, validation rules, and ledger manipulations reside strictly inside isolated Service classes.
+* **Data Transfer Objects (DTOs) & Mappers:** Communication between presentation views and business services is decoupled using explicit DTO classes and Mapper utilities, preventing the direct exposure of database models to the frontend.
+* **External API Client Integration:** The backend features a custom HTTP Client (`ExchangeClient`) built with robust error handling and fallback mechanisms to consume live third-party currency exchange APIs.
+* **Asynchronous Frontend:** The user interface relies heavily on asynchronous JavaScript (`fetch` API). Actions like logging transactions, calculating balance updates, switching base currencies, and re-rendering `Chart.js` graphs happen dynamically without requiring full page reloads, providing a smooth, single-page application (SPA) feel.
 
 ---
 
-## File and Directory Structure
+## File and Directory Structure Write-up
 
-Below is a detailed breakdown of the main components and directories created for this application:
+Below is a comprehensive write-up of every significant file contributed to this project, detailing its purpose and contents:
 
-### 1. Presentation Layer (Views)
-The `finance/views/` directory was modularized to organize routing logic effectively:
-*   **`auth_view.py`**: Handles user registration, login, and logout processes.
-*   **`dashboard_view.py`**: Prepares and aggregates financial metrics and graph data for the home screen.
-*   **`transaction_view.py`, `wallet_view.py`, `budget_view.py`, `category_view.py`**: Manage the CRUD (Create, Read, Update, Delete) operations for their respective models.
-*   **`api_views.py`**: Provides asynchronous endpoints for front-end JavaScript fetch requests.
+### Presentation Layer (Views)
+* `finance/views/auth_view.py`: Manages user authentication workflows, including registration, login validation, session termination, and the rendering of authentication forms.
+* `finance/views/dashboard_view.py`: Serves as the primary controller for the home screen. It aggregates consolidated net worth, wallet breakdowns, current monthly expenses, and active budget thresholds by invoking service classes, passing the formatted data to the dashboard template.
+* `finance/views/transaction_view.py`: Contains the logic for rendering the transaction ledger, processing the creation of new financial entries, and handling updates or deletion requests.
+* `finance/views/wallet_view.py`: Handles HTTP requests for listing active wallets, creating new accounts, editing wallet details (name, currency), and managing wallet archiving.
+* `finance/views/category_view.py`: Controls the views for displaying, creating, and editing custom spending classifications, including their visual properties (icons and colors).
+* `finance/views/budget_view.py`: Manages the interfaces for setting monthly category spending caps and querying current spending progress against assigned budgets.
+* `finance/views/api_views.py`: Exposes lightweight JSON API endpoints designed explicitly for frontend JavaScript fetch requests (e.g., dynamic chart data updates and real-time balance checks).
 
-### 2. Business Logic Layer (Services)
-The `finance/services/` directory contains all core business rules:
-*   **`base_service.py`**: A base class containing shared methods inherited by other services.
-*   **`transaction_service.py`, `wallet_service.py`, `budget_service.py`, `category_service.py`**: Encapsulate data creation and manipulation logic before interacting with the database.
-*   **`exchange_service.py`**: Manages the logic for currency conversion rates and calculations.
+### Business Logic Layer (Services)
+* `finance/services/base_service.py`: An abstract base class providing shared utilities, database error handling, and generic CRUD query helpers inherited by other services.
+* `finance/services/transaction_service.py`: Encapsulates the core rules for financial movements. Validates entries, updates target wallet balances, and processes complex filtering queries.
+* `finance/services/wallet_service.py`: Manages wallet domain logic, including balance recalculations based on historical entries and total user asset valuation.
+* `finance/services/category_service.py`: Handles category domain management, enforcing unique naming constraints and assigning default icons/colors.
+* `finance/services/budget_service.py`: Calculates monthly category usage by aggregating expenses within specific timeframes and evaluating them against user caps.
+* `finance/services/exchange_service.py`: Orchestrates currency conversion logic, interacting with the client to retrieve rates and handle fallback math when APIs are unavailable.
 
-### 3. External Integration (Clients)
-*   **`finance/clients/exchange_client.py`**: Responsible for making HTTP requests to external third-party currency exchange APIs.
+### External Integration & Data Transfer
+* `finance/clients/exchange_client.py`: A dedicated HTTP API client for making outgoing requests to the ExchangeRate-API. Includes strict error catching and graceful fallbacks.
+* `finance/dtos/` (`transaction_dto.py`, `wallet_dto.py`, `budget_dto.py`): Define immutable data structures used to transfer information securely between views and services.
+* `finance/mappers/` (`transaction_mapper.py`, `wallet_mapper.py`, `budget_mapper.py`): Utility classes responsible for converting Django ORM model instances into their respective DTO structures and vice versa.
 
-### 4. Data Transfer and Mapping (DTOs & Mappers)
-*   **`finance/dtos/`**: Contains Data Transfer Object classes (`transaction_dto.py`, `wallet_dto.py`, etc.) that standardize how data is passed between the front-end and the service layer.
-*   **`finance/mappers/`**: Utility classes designed to convert Django Model instances into DTOs and vice-versa.
+### Models & Commands
+* `finance/models.py`: Defines the relational database schema using Django ORM. Contains the `User`, `Wallet`, `Category`, `Transaction`, and `Budget` models with their respective relationships and constraints.
+* `finance/management/commands/seed_categories.py`: A custom Django command to pre-populate the database with default system categories (e.g., Housing, Food, Transport) utilizing predefined Bootstrap icons and hex colors.
+* `finance/management/commands/seed_ledger.py`: A developer utility to populate sample wallet balances and mock transactions for initial testing.
 
-### 5. Front-End (Templates & Static)
-*   **`finance/templates/finance/`**: Houses all HTML files, including the base `layout.html`, management views (`manage_transactions.html`), and dynamic UI components inside the `includes/` subfolder (like modals).
-*   **`finance/static/finance/`**: 
-    *   **`css/`**: Contains `index.css` for custom styling and overrides on top of the Bootstrap framework.
-    *   **`js/`**: Contains core scripts (`finance.js`, `shared.js`) responsible for UI interactivity, asynchronous requests, and `Chart.js` graph rendering.
-
-### 6. Custom Commands
-*   **`finance/management/commands/`**: Contains `seed_categories.py`, which are used to prepopulate the database with necessary initial categories.
+### Frontend (Templates & Static Assets)
+* `finance/templates/finance/layout.html`: The master HTML layout containing the global navigation sidebar, dynamic headers, and script imports.
+* `finance/templates/finance/dashboard.html`: The core view displaying net worth summary cards, Chart.js canvases, and budget progress bars.
+* `finance/templates/finance/manage_transactions.html`: The interactive ledger interface equipped with filter controls and pagination.
+* `finance/templates/finance/manage_wallets.html`, `manage_categories.html`, `manage_budgets.html`: Dedicated templates providing CRUD forms and tables for system resources.
+* `finance/templates/finance/includes/`: Contains reusable HTML snippets and modals (`transaction_modal.html`, `wallet_modal.html`, `currency_modal.html`).
+* `finance/static/finance/css/index.css`: Custom stylesheet overriding Bootstrap defaults, styling the sidebar, dashboard cards, and overall responsive layout.
+* `finance/static/finance/js/finance.js`: The main JavaScript file handling asynchronous form submissions, modal events, DOM manipulation, and Chart.js rendering.
+* `finance/static/finance/js/shared.js`: Helper script providing shared functions for currency formatting, date parsing, and UI alerts.
 
 ---
 
@@ -57,78 +71,42 @@ The application uses environment variables for security and external API configu
     DEBUG=True
     EXCHANGE_RATE_API_KEY=your_exchange_api_key_here
 
-### Obtaining an Exchange API Key (Optional)
-
-The application integrates with **ExchangeRate-API** for real-time currency conversions. While the project includes built-in mock fallbacks, you can optionally set up a live API key:
-
-1. Visit [ExchangeRate-API](https://www.exchangerate-api.com/) and sign up for a free account.
-2. Copy your API Key from the dashboard.
-3. Paste the key into your `.env` file in the root directory:
-   
-EXCHANGE_RATE_API_KEY=your_api_key_here
-
 ### Automatic Fallbacks & Default Configuration
 To ensure zero-configuration setup for local evaluation and testing, **all environment variables feature built-in fallbacks**:
-
-*   **`SECRET_KEY`**: If not supplied in the environment, a default insecure development key is used automatically.
-*   **`DEBUG`**: Defaults to `True` for development convenience.
-*   **`EXCHANGE_RATE_API_KEY`**: If no API key is configured or if network requests fail, the `ExchangeClient` gracefully falls back to mock conversion rates, ensuring that currency exchanges, dashboard computations, and application features continue to function seamlessly without breaking.
+* **`SECRET_KEY`**: Uses a default development key if not supplied.
+* **`DEBUG`**: Defaults to `True` for development convenience.
+* **`EXCHANGE_RATE_API_KEY`**: If no API key is provided, the `ExchangeClient` gracefully falls back to mock conversion rates, ensuring all dashboard features continue to function seamlessly.
 
 ---
 
 ## How to Run the Application
 
-Follow these steps to run the project in your local development environment:
-
-1.  **Prerequisites**: Ensure that you have Python 3.10+ and `pip` installed on your machine.
-2.  **Install Dependencies**:
-    Navigate to the root directory of the project (where `manage.py` is located) and set up your virtual environment and dependencies:
-
-    *   **For Development**:
-        ```bash
-        python3 -m venv venv
-        source venv/bin/activate
-        pip install -r requirements-dev.txt
-        ```
-
-    *   **For Production**:
-        ```bash
-        python3 -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-        ```
-        
-3.  **Database Setup**:
-    Run Django migrations to create the necessary tables in the default SQLite database:
+1.  **Prerequisites**: Ensure that you have Python 3.10+ installed.
+2.  **Install Dependencies**: Navigate to the project root and install requirements:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
+3.  **Database Setup**: Apply migrations to create the SQLite database:
     ```bash
     python manage.py makemigrations finance
     python manage.py migrate
     ```
-4.  **Seed the Database (Optional but Recommended)**:
-    Generate the initial data by running the custom management commands:
+4.  **Seed the Database (Recommended)**: Generate initial default categories:
     ```bash
     python manage.py seed_categories
     ```
 5.  **Start the Server**:
-    Launch the Django development server:
     ```bash
     python manage.py runserver
     ```
-6.  **Access the App**: 
-    Open your web browser and navigate to `http://127.0.0.1:8000/`. Register a new account to begin tracking your finances.
+6.  **Access**: Open `http://127.0.0.1:8000/` and register a new account to begin.
 
 ---
 
-## Additional Information
-
-*   **Icon Fallbacks:** The file `finance/data/fallback_icons.json` is used to ensure Bootstrap icons load gracefully in the event of network failures or if categories are created without defined icons.
-*   **Code Quality:** The project was developed with a strict focus on code formatting and quality, utilizing tools like `djlint` for Django templates, `cssbeautifier` for styling, and standard Python formatters guided by an `.editorconfig` file.
-
----
-
-## 🎓 Academic Honesty & Credits
-
-*   **Author:** Clovis Carmezini (Junior)
-*   **Course:** CS50's Web Development with Python and JavaScript (HarvardX)
-
-This project was developed as the Capstone project for CS50 Web. All core architecture, services, DTOs, and front-end integration logic were designed and implemented specifically for this final submission.
+## Academic Honesty & Credits
+* **Author:** Clovis Carmezini (Junior)
+* **Course:** CS50’s Web Development with Python and JavaScript (HarvardX)
+* **edX Username:** `cloviscarmezini`
+* **GitHub:** [`@cloviscarmezini`](https://github.com/cloviscarmezini)
